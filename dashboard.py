@@ -16,12 +16,13 @@ st.markdown("""
 # Load data function
 @st.cache_data
 def load_data():
-    data = pd.read_csv('cleaned_data.csv')
+    data = pd.read_csv('data.csv')
     data['Skill'] = data['Skill'].apply(ast.literal_eval)
     return data
 
 # Unique values plus 'All' option function
 def unique_sorted_values_plus_ALL(array):
+    array = array.dropna()  # Drop NaN values
     unique = sorted(array.unique().tolist())
     unique.insert(0, "All")
     return unique
@@ -62,10 +63,12 @@ with tab2:
     col1, col2, col3 = st.columns(3)
     with col1:
         state_option = st.selectbox('Select a State', unique_sorted_values_plus_ALL(data['State']), key='state2')
+        cities = unique_sorted_values_plus_ALL(data[data['State'] == state_option]['City']) if state_option != 'All' else unique_sorted_values_plus_ALL(data['City'])
     with col2:
-        city_option = st.selectbox('Select a City', unique_sorted_values_plus_ALL(data[data['State'] == state_option]['City']), key='city2')
+        city_option = st.selectbox('Select a City', cities, key='city2')
     with col3:
         job_option = st.text_input('Enter a Job Title', key='job_input2')
+    
     filtered_data = data
     if state_option != 'All':
         filtered_data = filtered_data[filtered_data['State'] == state_option]
@@ -73,13 +76,27 @@ with tab2:
         filtered_data = filtered_data[filtered_data['City'] == city_option]
     if job_option:
         filtered_data = filtered_data[filtered_data['Job Title'].str.contains(job_option, case=False)]
-    average_salary = filtered_data.groupby('Job Title')['Average Salary'].mean().nlargest(10).reset_index()
+    
+    
+    # Get the top 10 most common jobs
+    common_jobs = filtered_data['Job Title'].value_counts().nlargest(10).index
+
+    # Filter the data to include only the top 10 most common jobs
+    filtered_data = filtered_data[filtered_data['Job Title'].isin(common_jobs)]
+
+    # Calculate the average salary for these jobs
+    average_salary = filtered_data.groupby('Job Title')['Average Salary'].mean().reset_index()
+
+    # Sort by average salary
+    average_salary = average_salary.sort_values(by='Average Salary', ascending=False)
+    
     fig = px.bar(average_salary, x='Average Salary', y='Job Title', title='Average Salary by Job Title',
                  labels={'Average Salary': 'Average Salary ($)'}, color='Average Salary', color_continuous_scale='greens')
     fig.update_layout(plot_bgcolor='rgba(0, 0, 0, 0)', paper_bgcolor='rgba(0, 0, 0, 0)', yaxis={'categoryorder': 'total ascending', 'title': ''}, autosize=True)
     for i, (job_title, salary) in enumerate(zip(average_salary['Job Title'], average_salary['Average Salary'])):
         fig.add_annotation(x=salary, y=job_title, text=f'${salary:,.0f}', showarrow=False, font=dict(color='white'), xshift=25)
     st.plotly_chart(fig, use_container_width=True)
+
 
 
 # Top Skills
