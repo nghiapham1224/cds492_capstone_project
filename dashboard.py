@@ -55,6 +55,7 @@ with tab1:
                   yaxis={'categoryorder': 'total ascending', 'title': ''}, autosize=True)
     st.plotly_chart(fig, use_container_width=True)
 
+
 # Job Salary
 with tab2:
     st.header('Data Science Salary Overview')
@@ -72,7 +73,6 @@ with tab2:
         filtered_data = filtered_data[filtered_data['City'] == city_option]
     if job_option:
         filtered_data = filtered_data[filtered_data['Job Title'].str.contains(job_option, case=False)]
-
     average_salary = filtered_data.groupby('Job Title')['Average Salary'].mean().nlargest(10).reset_index()
     fig = px.bar(average_salary, x='Average Salary', y='Job Title', title='Average Salary by Job Title',
                  labels={'Average Salary': 'Average Salary ($)'}, color='Average Salary', color_continuous_scale='greens')
@@ -80,6 +80,7 @@ with tab2:
     for i, (job_title, salary) in enumerate(zip(average_salary['Job Title'], average_salary['Average Salary'])):
         fig.add_annotation(x=salary, y=job_title, text=f'${salary:,.0f}', showarrow=False, font=dict(color='white'), xshift=25)
     st.plotly_chart(fig, use_container_width=True)
+
 
 # Top Skills
 with tab3:
@@ -93,10 +94,11 @@ with tab3:
     fig.update_layout(plot_bgcolor='rgba(0, 0, 0, 0)', paper_bgcolor='rgba(0, 0, 0, 0)', yaxis={'categoryorder': 'total ascending', 'title': ''}, autosize=True)
     st.plotly_chart(fig, use_container_width=True)
 
+
 # Skills Pay
 with tab4:
     st.header('Skills Salary Overview')
-    skills_salary = [{'Skill': skill, 'Salary': (row['Min Salary'] + row['Max Salary']) / 2} for index, row in data.iterrows() for skill in row['Skill']]
+    skills_salary = [{'Skill': skill, 'Salary': row['Average Salary']} for index, row in data.iterrows() for skill in row['Skill']]
     skills_salary_df = pd.DataFrame(skills_salary)
     average_salary = skills_salary_df.groupby('Skill')['Salary'].mean().reset_index()
     fig = px.bar(average_salary, x='Salary', y='Skill', title='Average Salary by Skill', labels={'Salary': 'Average Salary ($)'}, color='Salary', color_continuous_scale='Purples', height=600)
@@ -106,19 +108,14 @@ with tab4:
     st.plotly_chart(fig, use_container_width=True)
     
 
-
 # Map
 with tab5:
     st.header('Map View')
-
     # Count the number of jobs in each state
     state_counts = data['State'].value_counts().reset_index()
     state_counts.columns = ['State', 'Number of Jobs']
-
-    # If there are NaN values, you can fill them with 0
+    # If there are NaN values, fill them with 0
     state_counts['Number of Jobs'] = state_counts['Number of Jobs'].fillna(0)
-
-
     fig = go.Figure(
         data=go.Choropleth(
             locations=state_counts['State'],
@@ -143,6 +140,5 @@ with tab5:
             plot_bgcolor='rgba(0,0,0,0)',  # clear background
         )
     )
-
     # Display the map within the Streamlit app
     st.plotly_chart(fig, use_container_width=True)
