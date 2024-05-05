@@ -1,3 +1,4 @@
+from turtle import width
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -54,7 +55,8 @@ with tab1:
     job_counts = filtered_data['Job Title'].value_counts().head(10).reset_index()
     job_counts.columns = ['Job Title', 'Number of Openings']
     fig = px.bar(job_counts, y='Job Title', x='Number of Openings', orientation='h',
-                 color='Number of Openings', color_continuous_scale='blues', title='Top 10 Job Titles with Most Openings')
+                 color='Number of Openings', color_continuous_scale='teal', title='Top 10 Job Titles with Most Openings')
+    fig.update_traces(marker_line=dict(width=1, color='black'))
     fig.update_layout(plot_bgcolor='rgba(0, 0, 0, 0)', paper_bgcolor='rgba(0, 0, 0, 0)', 
                   yaxis={'categoryorder': 'total ascending', 'title': ''}, autosize=True)
     
@@ -93,7 +95,8 @@ with tab2:
     average_salary = average_salary.sort_values(by='Average Salary', ascending=False)
     
     fig = px.bar(average_salary, x='Average Salary', y='Job Title', title='Average Salary by Job Title',
-                 labels={'Average Salary': 'Average Salary ($)'}, color='Average Salary', color_continuous_scale='greens')
+                 labels={'Average Salary': 'Average Salary ($)'}, color='Average Salary', color_continuous_scale='burg')
+    fig.update_traces(marker_line=dict(width=1, color='black'))
     fig.update_layout(plot_bgcolor='rgba(0, 0, 0, 0)', paper_bgcolor='rgba(0, 0, 0, 0)', yaxis={'categoryorder': 'total ascending', 'title': ''}, autosize=True)
     for i, (job_title, salary) in enumerate(zip(average_salary['Job Title'], average_salary['Average Salary'])):
         fig.add_annotation(x=salary, y=job_title, text=f'${salary:,.0f}', showarrow=False, font=dict(color='white'), xshift=25)
@@ -112,7 +115,8 @@ with tab3:
     skill_counts = pd.Series(all_skills).value_counts().head(10).reset_index()
     skill_counts.columns = ['Skill', 'Frequency']
    
-    fig = px.bar(skill_counts, y='Skill', x='Frequency', orientation='h', title=f'Top Skills for {job_title_option}', color='Frequency', color_continuous_scale='oranges')
+    fig = px.bar(skill_counts, y='Skill', x='Frequency', orientation='h', title=f'Top Skills for {job_title_option}', color='Frequency', color_continuous_scale='darkmint')
+    fig.update_traces(marker_line=dict(width=1, color='black'))
     fig.update_layout(plot_bgcolor='rgba(0, 0, 0, 0)', paper_bgcolor='rgba(0, 0, 0, 0)', yaxis={'categoryorder': 'total ascending', 'title': ''}, autosize=True)
     
     st.plotly_chart(fig, use_container_width=True)
@@ -127,7 +131,8 @@ with tab4:
     skills_salary_df = pd.DataFrame(skills_salary)
     average_salary = skills_salary_df.groupby('Skill')['Salary'].mean().reset_index()
     
-    fig = px.bar(average_salary, x='Salary', y='Skill', title='Average Salary by Skill', labels={'Salary': 'Average Salary ($)'}, color='Salary', color_continuous_scale='Purples', height=600)
+    fig = px.bar(average_salary, x='Salary', y='Skill', title='Average Salary by Skill', labels={'Salary': 'Average Salary ($)'}, color='Salary', color_continuous_scale='purpor', height=600)
+    fig.update_traces(marker_line=dict(width=1, color='black'))
     fig.update_layout(plot_bgcolor='rgba(0, 0, 0, 0)', paper_bgcolor='rgba(0, 0, 0, 0)', yaxis={'categoryorder': 'total ascending', 'title': ''}, autosize=True)
     for i, (skill, salary) in enumerate(zip(average_salary['Skill'], average_salary['Salary'])):
         fig.add_annotation(x=salary, y=skill, text=f'${salary:,.0f}', showarrow=False, font=dict(color='white'), xshift=25)
@@ -138,11 +143,13 @@ with tab4:
 # Map
 with tab5:
     st.header('Map View')
+    
     # Count the number of jobs in each state
     state_counts = data['State'].value_counts().reset_index()
     state_counts.columns = ['State', 'Number of Jobs']
     # If there are NaN values, fill them with 0
     state_counts['Number of Jobs'] = state_counts['Number of Jobs'].fillna(0)
+    
     fig = go.Figure(
         data=go.Choropleth(
             locations=state_counts['State'],
@@ -159,8 +166,6 @@ with tab5:
                 subunitcolor='grey'
             ),
             title='Heatmap of Data Science Job Openings in the US',
-            font=dict(size=9, color="White"),
-            titlefont=dict(size=15, color="White"),
             geo_scope='usa',
             margin=dict(r=0, t=40, l=0, b=0),
             paper_bgcolor='rgba(0,0,0,0)',  # clear background
