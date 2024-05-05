@@ -33,15 +33,18 @@ data = load_data()
 # Creating tabs for different views
 tab1, tab2, tab3, tab4, tab5 = st.tabs(["Top Job Titles", "Job Salaries", "Top Skills", "Skills Pay", "Map View"])
 
+
 # Top Job Titles
 with tab1:
     st.header('Top Data Science Job Titles')
+    
     col1, col2 = st.columns(2)
     with col1:
         state_option = st.selectbox('Select a State', unique_sorted_values_plus_ALL(data['State']), key='state1')
     cities = unique_sorted_values_plus_ALL(data[data['State'] == state_option]['City']) if state_option != 'All' else unique_sorted_values_plus_ALL(data['City'])
     with col2:
         city_option = st.selectbox('Select a City', cities, key='city1')
+        
     filtered_data = data
     if state_option != 'All':
         filtered_data = filtered_data[filtered_data['State'] == state_option]
@@ -54,12 +57,15 @@ with tab1:
                  color='Number of Openings', color_continuous_scale='blues', title='Top 10 Job Titles with Most Openings')
     fig.update_layout(plot_bgcolor='rgba(0, 0, 0, 0)', paper_bgcolor='rgba(0, 0, 0, 0)', 
                   yaxis={'categoryorder': 'total ascending', 'title': ''}, autosize=True)
+    
     st.plotly_chart(fig, use_container_width=True)
 
+#-------------------------------------------------------------------------------------------------------------------
 
 # Job Salary
 with tab2:
     st.header('Data Science Salary Overview')
+    
     col1, col2, col3 = st.columns(3)
     with col1:
         state_option = st.selectbox('Select a State', unique_sorted_values_plus_ALL(data['State']), key='state2')
@@ -76,17 +82,13 @@ with tab2:
         filtered_data = filtered_data[filtered_data['City'] == city_option]
     if job_option:
         filtered_data = filtered_data[filtered_data['Job Title'].str.contains(job_option, case=False)]
-    
-    
+
     # Get the top 10 most common jobs
     common_jobs = filtered_data['Job Title'].value_counts().nlargest(10).index
-
     # Filter the data to include only the top 10 most common jobs
     filtered_data = filtered_data[filtered_data['Job Title'].isin(common_jobs)]
-
     # Calculate the average salary for these jobs
     average_salary = filtered_data.groupby('Job Title')['Average Salary'].mean().reset_index()
-
     # Sort by average salary
     average_salary = average_salary.sort_values(by='Average Salary', ascending=False)
     
@@ -95,35 +97,43 @@ with tab2:
     fig.update_layout(plot_bgcolor='rgba(0, 0, 0, 0)', paper_bgcolor='rgba(0, 0, 0, 0)', yaxis={'categoryorder': 'total ascending', 'title': ''}, autosize=True)
     for i, (job_title, salary) in enumerate(zip(average_salary['Job Title'], average_salary['Average Salary'])):
         fig.add_annotation(x=salary, y=job_title, text=f'${salary:,.0f}', showarrow=False, font=dict(color='white'), xshift=25)
+    
     st.plotly_chart(fig, use_container_width=True)
 
-
+#-------------------------------------------------------------------------------------------------------------------
 
 # Top Skills
 with tab3:
     st.header('Most Demanding Skills')
+    
     job_title_option = st.selectbox('Select a Job Title', unique_sorted_values_plus_ALL(data['Job Title']), key='job3')
     filtered_data = data[data['Job Title'] == job_title_option] if job_title_option != 'All' else data
     all_skills = [skill for skills in filtered_data['Skill'].dropna() for skill in skills]
     skill_counts = pd.Series(all_skills).value_counts().head(10).reset_index()
     skill_counts.columns = ['Skill', 'Frequency']
+   
     fig = px.bar(skill_counts, y='Skill', x='Frequency', orientation='h', title=f'Top Skills for {job_title_option}', color='Frequency', color_continuous_scale='oranges')
     fig.update_layout(plot_bgcolor='rgba(0, 0, 0, 0)', paper_bgcolor='rgba(0, 0, 0, 0)', yaxis={'categoryorder': 'total ascending', 'title': ''}, autosize=True)
+    
     st.plotly_chart(fig, use_container_width=True)
 
+#-------------------------------------------------------------------------------------------------------------------
 
 # Skills Pay
 with tab4:
     st.header('Skills Salary Overview')
+    
     skills_salary = [{'Skill': skill, 'Salary': row['Average Salary']} for index, row in data.iterrows() for skill in row['Skill']]
     skills_salary_df = pd.DataFrame(skills_salary)
     average_salary = skills_salary_df.groupby('Skill')['Salary'].mean().reset_index()
+    
     fig = px.bar(average_salary, x='Salary', y='Skill', title='Average Salary by Skill', labels={'Salary': 'Average Salary ($)'}, color='Salary', color_continuous_scale='Purples', height=600)
     fig.update_layout(plot_bgcolor='rgba(0, 0, 0, 0)', paper_bgcolor='rgba(0, 0, 0, 0)', yaxis={'categoryorder': 'total ascending', 'title': ''}, autosize=True)
     for i, (skill, salary) in enumerate(zip(average_salary['Skill'], average_salary['Salary'])):
         fig.add_annotation(x=salary, y=skill, text=f'${salary:,.0f}', showarrow=False, font=dict(color='white'), xshift=25)
     st.plotly_chart(fig, use_container_width=True)
     
+#-------------------------------------------------------------------------------------------------------------------
 
 # Map
 with tab5:
